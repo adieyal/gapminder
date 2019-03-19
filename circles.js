@@ -22,8 +22,6 @@ var years = {
     end_year : 2050
 }
 
-var tweenYear, startAnimation;
-
 // Chart dimensions.
 var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 100},
     width = 960 - margin.right,
@@ -224,7 +222,6 @@ Data.prototype = {
         return d3.max(this.data, function(datum) { return d3.max(populations(datum)); })
     }
 }
-
 
 // Load the data.
 d3.json("income.json", function(data) {
