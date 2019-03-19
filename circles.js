@@ -143,7 +143,6 @@ d3.json("income.json", function(nations) {
         .attr("y", box.y)
         .attr("width", box.width)
         .attr("height", box.height)
-        //.on("mouseover", enableInteraction);
 
     // Start a transition that interpolates the data based on year.
     startAnimation = function() {
@@ -151,7 +150,6 @@ d3.json("income.json", function(nations) {
             .duration(30000)
             .ease("linear")
             .tween("year", tweenYear)
-            .each("end", enableInteraction);
     }
 
     stopAnimation = function() {
@@ -172,35 +170,6 @@ d3.json("income.json", function(nations) {
     function order(a, b) {
       return radius(b) - radius(a);
     }
-
-  // After the transition finishes, you can mouseover to change the year.
-  function enableInteraction() {
-    var yearScale = d3.scale.linear()
-        .domain([start_year, end_year])
-        .range([box.x + 10, box.x + box.width - 10])
-        .clamp(true);
-
-    // Cancel the current transition, if any.
-    svg.transition().duration(0);
-
-    overlay
-        .on("mouseover", mouseover)
-        .on("mouseout", mouseout)
-        .on("mousemove", mousemove)
-        .on("touchmove", mousemove);
-
-    function mouseover() {
-      label.classed("active", true);
-    }
-
-    function mouseout() {
-      label.classed("active", false);
-    }
-
-    function mousemove() {
-      displayYear(yearScale.invert(d3.mouse(this)[0]));
-    }
-  }
 
   // Tweens the entire chart by first tweening the year, and then the data.
   // For the interpolated data, the dots and label are redrawn.
