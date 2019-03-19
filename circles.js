@@ -91,7 +91,73 @@ GapMinder.prototype = {
             .duration(30000)
             .ease("linear")
             .tween("year", tweenYear)
-    }
+    },
+
+    // Positions the dots based on data.
+    position : function(dot, gapminder) {
+        self = gapminder;
+        dot
+          .attr("cx", function(d) { return self.scales.x(x(d)); })
+          .attr("cy", function(d) { return self.scales.y(y(d)); })
+          .attr("r", function(d) { return self.scales.radius(radius(d)); });
+    },
+
+    // Defines a sort order so that the smallest dots are drawn on top.
+    order : function(a, b) {
+      return radius(b) - radius(a);
+    },
+
+    initCircles : function(dataobj, year) {
+        // Add a dot per nation. Initialize the data at start_year, and set the colors.
+        this.dot = this.svg.append("g")
+            .attr("class", "dots")
+            .selectAll(".dot")
+                .data(this.interpolateData(dataobj, start_year))
+                .enter().append("circle")
+                    .attr("class", "dot")
+                    .style("fill", function(d) { return colorScale(color(d)); })
+                    .call(this.position, this)
+                    .sort(this.order);
+    },
+
+    // Updates the display to show the specified year.
+    displayYear : function(dataobj, year) {
+
+            this.dot.data(this.interpolateData(dataobj, year), key).call(this.position, this).sort(this.order);
+            this.label.text(Math.round(year));
+            // Add a title.
+            this.dot.append("title").text(key);
+        },
+
+
+    // Interpolates the dataset for the given (fractional) year.
+    interpolateData : function(dataobj, year) {
+        // A bisector since many nation's data is sparsely-defined.
+        var bisect = d3.bisector(function(d) { return d[0]; });
+
+        // Finds (and possibly interpolates) the value for the specified year.
+        function interpolateValues(values, year) {
+            var i = bisect.left(values, year, 0, values.length - 1),
+                a = values[i];
+            if (i > 0) {
+              var b = values[i - 1],
+                  t = (year - a[0]) / (b[0] - a[0]);
+              return a[1] * (1 - t) + b[1] * t;
+            }
+            return a[1];
+        }
+
+        return dataobj.data.map(function(d) {
+          return {
+            name: key(d),
+            colour: color(d),
+            "Income level": interpolateValues(x(d), year),
+            "Median age": interpolateValues(y(d), year),
+            "Population": interpolateValues(d["Population"], year)
+          };
+        });
+  }
+
 
 }
 
@@ -116,46 +182,55 @@ var StartButton = function(gapminder, container) {
 
 }
 
+var Data = function(data) {
+    this.data = data;
+}
+
+Data.prototype = {
+    min_income : function() {
+        return d3.min(this.data, function(datum) { return d3.min(incomes(datum)); })
+    },
+
+    max_income : function() {
+        return d3.max(this.data, function(datum) { return d3.max(incomes(datum)); })
+    },
+
+    min_age : function() {
+        return d3.min(this.data, function(datum) { return d3.min(ages(datum)); })
+    },
+
+    max_age : function() {
+        return d3.max(this.data, function(datum) { return d3.max(ages(datum)); })
+    },
+
+    min_population : function() {
+        return d3.min(this.data, function(datum) { return d3.min(populations(datum)); })
+    },
+
+    max_population : function() {
+        return d3.max(this.data, function(datum) { return d3.max(populations(datum)); })
+    }
+}
+
 
 // Load the data.
-d3.json("income.json", function(nations) {
+d3.json("income.json", function(data) {
+    var dataobj = new Data(data)
 
-    min_income = d3.min(nations, function(nation) { return d3.min(incomes(nation)); })
-    max_income = d3.max(nations, function(nation) { return d3.max(incomes(nation)); })
-    min_age = d3.min(nations, function(nation) { return d3.min(ages(nation)); })
-    max_age = d3.max(nations, function(nation) { return d3.max(ages(nation)); })
-    min_population = d3.min(nations, function(nation) { return d3.min(populations(nation)); })
-    max_population = d3.max(nations, function(nation) { return d3.max(populations(nation)); })
 
     var gapminder = new GapMinder(container, {
         width: width,
         height: height,
         margin: margin,
         scales : {
-            x : d3.scale.log().domain([min_income, max_income]).range([10, width]),
-            y : d3.scale.linear().domain([min_age, max_age]).range([height, 10]),
-            radius : d3.scale.sqrt().domain([min_population, max_population]).range([0, 40])
+            x : d3.scale.log().domain([dataobj.min_income(), dataobj.max_income()]).range([10, width]),
+            y : d3.scale.linear().domain([dataobj.min_age(), dataobj.max_age()]).range([height, 10]),
+            radius : d3.scale.sqrt().domain([dataobj.min_population(), dataobj.max_population()]).range([0, 40])
         }
     });
     var button = new StartButton(gapminder, container);
 
-
-    // A bisector since many nation's data is sparsely-defined.
-    var bisect = d3.bisector(function(d) { return d[0]; });
-
-    // Add a dot per nation. Initialize the data at start_year, and set the colors.
-    var dot = gapminder.svg.append("g")
-        .attr("class", "dots")
-        .selectAll(".dot")
-            .data(interpolateData(start_year))
-            .enter().append("circle")
-                .attr("class", "dot")
-                .style("fill", function(d) { return colorScale(color(d)); })
-                .call(position)
-                .sort(order);
-    // Add a title.
-    dot.append("title").text(key);
-
+    gapminder.initCircles(dataobj, start_year);
     // Add an overlay for the year label.
     var box = gapminder.label.node().getBBox();
 
@@ -168,55 +243,13 @@ d3.json("income.json", function(nations) {
 
     gapminder.startAnimation()
 
-    // Positions the dots based on data.
-    function position(dot) {
-        dot
-          .attr("cx", function(d) { return gapminder.scales.x(x(d)); })
-          .attr("cy", function(d) { return gapminder.scales.y(y(d)); })
-          .attr("r", function(d) { return gapminder.scales.radius(radius(d)); });
-    }
-
-    // Defines a sort order so that the smallest dots are drawn on top.
-    function order(a, b) {
-      return radius(b) - radius(a);
-    }
 
   // Tweens the entire chart by first tweening the year, and then the data.
   // For the interpolated data, the dots and label are redrawn.
   tweenYear = function() {
     var year = d3.interpolateNumber(start_year, end_year);
-    return function(t) { displayYear(year(t)); };
+    return function(t) { gapminder.displayYear(dataobj, year(t)); };
   }
 
-  // Updates the display to show the specified year.
-  displayYear = function(year) {
-    dot.data(interpolateData(year), key).call(position).sort(order);
-    gapminder.label.text(Math.round(year));
-  }
 
-  // Interpolates the dataset for the given (fractional) year.
-  function interpolateData(year) {
-    return nations.map(function(d) {
-      return {
-        name: key(d),
-        colour: color(d),
-        region: "",
-        "Income level": interpolateValues(x(d), year),
-        "Median age": interpolateValues(y(d), year),
-        "Population": interpolateValues(d["Population"], year)
-      };
-    });
-  }
-
-  // Finds (and possibly interpolates) the value for the specified year.
-  function interpolateValues(values, year) {
-    var i = bisect.left(values, year, 0, values.length - 1),
-        a = values[i];
-    if (i > 0) {
-      var b = values[i - 1],
-          t = (year - a[0]) / (b[0] - a[0]);
-      return a[1] * (1 - t) + b[1] * t;
-    }
-    return a[1];
-  }
 });
