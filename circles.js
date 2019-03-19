@@ -16,8 +16,11 @@ var ages = function(country) {
 var populations = function(country) {
     return country["Population"].map(function(el) { return el[1]});
 }
-var start_year = 2020;
-var end_year = 2050;
+
+var years = {
+    start_year: 2020,
+    end_year : 2050
+}
 
 var tweenYear, startAnimation;
 
@@ -31,10 +34,12 @@ var colorScale = d3.scale.category10();
 
 var container = d3.select("#chart")
 
-var GapMinder = function(container, properties) {
+var GapMinder = function(container, dataobj, years, properties) {
     var p = properties;
 
     this.scales = p.scales;
+    this.years = years;
+    this.dataobj = dataobj;
 
     var xAxis = d3.svg.axis().orient("bottom").scale(this.scales.x).ticks(12, d3.format(",d")),
         yAxis = d3.svg.axis().scale(this.scales.y).orient("left");
@@ -78,7 +83,7 @@ var GapMinder = function(container, properties) {
         .attr("text-anchor", "end")
         .attr("y", p.height - 24)
         .attr("x", p.width)
-        .text(start_year);
+        .text(this.years.start_year);
 }
 
 GapMinder.prototype = {
@@ -87,6 +92,14 @@ GapMinder.prototype = {
     },
 
     startAnimation : function() {
+        var self = this;
+      // Tweens the entire chart by first tweening the year, and then the data.
+      // For the interpolated data, the dots and label are redrawn.
+      tweenYear = function() {
+        var year = d3.interpolateNumber(self.years.start_year, self.years.end_year);
+        return function(t) { self.displayYear(year(t)); };
+      }
+
         this.svg.transition()
             .duration(30000)
             .ease("linear")
@@ -107,12 +120,12 @@ GapMinder.prototype = {
       return radius(b) - radius(a);
     },
 
-    initCircles : function(dataobj, year) {
+    initCircles : function() {
         // Add a dot per nation. Initialize the data at start_year, and set the colors.
         this.dot = this.svg.append("g")
             .attr("class", "dots")
             .selectAll(".dot")
-                .data(this.interpolateData(dataobj, start_year))
+                .data(this.interpolateData(this.years.start_year))
                 .enter().append("circle")
                     .attr("class", "dot")
                     .style("fill", function(d) { return colorScale(color(d)); })
@@ -121,9 +134,9 @@ GapMinder.prototype = {
     },
 
     // Updates the display to show the specified year.
-    displayYear : function(dataobj, year) {
+    displayYear : function(year) {
 
-            this.dot.data(this.interpolateData(dataobj, year), key).call(this.position, this).sort(this.order);
+            this.dot.data(this.interpolateData(year), key).call(this.position, this).sort(this.order);
             this.label.text(Math.round(year));
             // Add a title.
             this.dot.append("title").text(key);
@@ -131,7 +144,7 @@ GapMinder.prototype = {
 
 
     // Interpolates the dataset for the given (fractional) year.
-    interpolateData : function(dataobj, year) {
+    interpolateData : function(year) {
         // A bisector since many nation's data is sparsely-defined.
         var bisect = d3.bisector(function(d) { return d[0]; });
 
@@ -147,7 +160,7 @@ GapMinder.prototype = {
             return a[1];
         }
 
-        return dataobj.data.map(function(d) {
+        return this.dataobj.data.map(function(d) {
           return {
             name: key(d),
             colour: color(d),
@@ -217,8 +230,7 @@ Data.prototype = {
 d3.json("income.json", function(data) {
     var dataobj = new Data(data)
 
-
-    var gapminder = new GapMinder(container, {
+    var gapminder = new GapMinder(container, dataobj, years, {
         width: width,
         height: height,
         margin: margin,
@@ -230,26 +242,8 @@ d3.json("income.json", function(data) {
     });
     var button = new StartButton(gapminder, container);
 
-    gapminder.initCircles(dataobj, start_year);
-    // Add an overlay for the year label.
-    var box = gapminder.label.node().getBBox();
-
-    var overlay = gapminder.svg.append("rect")
-        .attr("class", "overlay")
-        .attr("x", box.x)
-        .attr("y", box.y)
-        .attr("width", box.width)
-        .attr("height", box.height)
-
+    gapminder.initCircles();
     gapminder.startAnimation()
-
-
-  // Tweens the entire chart by first tweening the year, and then the data.
-  // For the interpolated data, the dots and label are redrawn.
-  tweenYear = function() {
-    var year = d3.interpolateNumber(start_year, end_year);
-    return function(t) { gapminder.displayYear(dataobj, year(t)); };
-  }
 
 
 });
