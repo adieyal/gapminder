@@ -27,76 +27,95 @@ var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 100},
     height = 500 - margin.top - margin.bottom;
 
 // Various scales. These domains make assumptions of data, naturally.
-var xScale = d3.scale.log().domain([300, 1e5]).range([0, width]),
-    yScale = d3.scale.linear().domain([10, 85]).range([height, 0]),
-    radiusScale = d3.scale.sqrt().domain([0, 5e8]).range([0, 40]),
-    colorScale = d3.scale.category10();
-
-// The x & y axes.
-var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
-    yAxis = d3.svg.axis().scale(yScale).orient("left");
-
+var colorScale = d3.scale.category10();
 
 var container = d3.select("#chart")
-var svg = container.append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var animating = false;
+var GapMinder = function(container, properties) {
+    var p = properties;
 
-container.append("button")
-    .text("Start")
-    .style("margin-left", margin.left + 'px')
-    .on("click", function(el) {
-        var button = d3.select(d3.event.srcElement);
-        if (!animating) {
-            startAnimation()
-            animating = true;
-            button.text("Stop");
-        } else {
-            stopAnimation()
-            animating = false;
-            button.text("Start");
-        }
-    })
+    this.scales = p.scales;
 
+    var xAxis = d3.svg.axis().orient("bottom").scale(this.scales.x).ticks(12, d3.format(",d")),
+        yAxis = d3.svg.axis().scale(this.scales.y).orient("left");
 
-// Add the x-axis.
-svg.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + height + ")")
-    .call(xAxis);
+    this.svg = container.append("svg")
+        .attr("width", p.width + p.margin.left + p.margin.right)
+        .attr("height", p.height + p.margin.top + p.margin.bottom)
+        .append("g")
+            .attr("transform", "translate(" + p.margin.left + "," + p.margin.top + ")");
 
-// Add the y-axis.
-svg.append("g")
-    .attr("class", "y axis")
-    .call(yAxis);
+    // Add the x-axis.
+    this.svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + p.height + ")")
+        .call(xAxis);
 
-// Add an x-axis label.
-svg.append("text")
-    .attr("class", "x label")
-    .attr("text-anchor", "end")
-    .attr("x", width)
-    .attr("y", height - 6)
-    .text("Income level");
+    // Add the y-axis.
+    this.svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
 
-// Add a y-axis label.
-svg.append("text")
-    .attr("class", "y label")
-    .attr("text-anchor", "end")
-    .attr("y", 6)
-    .attr("dy", ".75em")
-    .attr("transform", "rotate(-90)")
-    .text("Median age");
+    // Add an x-axis label.
+    this.svg.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "end")
+        .attr("x", p.width)
+        .attr("y", p.height - 6)
+        .text("Income level");
 
-var label = svg.append("text")
-    .attr("class", "year label")
-    .attr("text-anchor", "end")
-    .attr("y", height - 24)
-    .attr("x", width)
-    .text(start_year);
+    // Add a y-axis label.
+    this.svg.append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "end")
+        .attr("y", 6)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text("Median age");
+
+    this.label = this.svg.append("text")
+        .attr("class", "year label")
+        .attr("text-anchor", "end")
+        .attr("y", p.height - 24)
+        .attr("x", p.width)
+        .text(start_year);
+}
+
+GapMinder.prototype = {
+    stopAnimation : function() {
+        this.svg.transition();
+    },
+
+    startAnimation : function() {
+        this.svg.transition()
+            .duration(30000)
+            .ease("linear")
+            .tween("year", tweenYear)
+    }
+
+}
+
+var StartButton = function(gapminder, container) {
+    animating = false;
+
+    container.append("button")
+        .text("Start")
+        .style("margin-left", margin.left + 'px')
+        .on("click", function(el) {
+            var button = d3.select(d3.event.srcElement);
+            if (!animating) {
+                gapminder.startAnimation()
+                animating = true;
+                button.text("Stop");
+            } else {
+                gapminder.stopAnimation()
+                animating = false;
+                button.text("Start");
+            }
+        })
+
+}
+
 
 // Load the data.
 d3.json("income.json", function(nations) {
@@ -105,24 +124,27 @@ d3.json("income.json", function(nations) {
     max_income = d3.max(nations, function(nation) { return d3.max(incomes(nation)); })
     min_age = d3.min(nations, function(nation) { return d3.min(ages(nation)); })
     max_age = d3.max(nations, function(nation) { return d3.max(ages(nation)); })
+    min_population = d3.min(nations, function(nation) { return d3.min(populations(nation)); })
+    max_population = d3.max(nations, function(nation) { return d3.max(populations(nation)); })
 
-    min_population = d3.min(nations, function(nation) {
-        return d3.min(populations(nation));
-    })
+    var gapminder = new GapMinder(container, {
+        width: width,
+        height: height,
+        margin: margin,
+        scales : {
+            x : d3.scale.log().domain([min_income, max_income]).range([10, width]),
+            y : d3.scale.linear().domain([min_age, max_age]).range([height, 10]),
+            radius : d3.scale.sqrt().domain([min_population, max_population]).range([0, 40])
+        }
+    });
+    var button = new StartButton(gapminder, container);
 
-    max_population = d3.max(nations, function(nation) {
-        return d3.max(populations(nation));
-    })
-
-    xScale = d3.scale.log().domain([min_income, max_income]).range([10, width])
-    yScale = d3.scale.linear().domain([min_age, max_age]).range([height, 10])
-    radiusScale = d3.scale.sqrt().domain([min_population, max_population]).range([0, 40])
 
     // A bisector since many nation's data is sparsely-defined.
     var bisect = d3.bisector(function(d) { return d[0]; });
 
     // Add a dot per nation. Initialize the data at start_year, and set the colors.
-    var dot = svg.append("g")
+    var dot = gapminder.svg.append("g")
         .attr("class", "dots")
         .selectAll(".dot")
             .data(interpolateData(start_year))
@@ -135,35 +157,23 @@ d3.json("income.json", function(nations) {
     dot.append("title").text(key);
 
     // Add an overlay for the year label.
-    var box = label.node().getBBox();
+    var box = gapminder.label.node().getBBox();
 
-    var overlay = svg.append("rect")
+    var overlay = gapminder.svg.append("rect")
         .attr("class", "overlay")
         .attr("x", box.x)
         .attr("y", box.y)
         .attr("width", box.width)
         .attr("height", box.height)
 
-    // Start a transition that interpolates the data based on year.
-    startAnimation = function() {
-        svg.transition()
-            .duration(30000)
-            .ease("linear")
-            .tween("year", tweenYear)
-    }
-
-    stopAnimation = function() {
-        svg.transition();
-    }
-
-    startAnimation()
+    gapminder.startAnimation()
 
     // Positions the dots based on data.
     function position(dot) {
         dot
-          .attr("cx", function(d) { return xScale(x(d)); })
-          .attr("cy", function(d) { return yScale(y(d)); })
-          .attr("r", function(d) { return radiusScale(radius(d)); });
+          .attr("cx", function(d) { return gapminder.scales.x(x(d)); })
+          .attr("cy", function(d) { return gapminder.scales.y(y(d)); })
+          .attr("r", function(d) { return gapminder.scales.radius(radius(d)); });
     }
 
     // Defines a sort order so that the smallest dots are drawn on top.
@@ -181,7 +191,7 @@ d3.json("income.json", function(nations) {
   // Updates the display to show the specified year.
   displayYear = function(year) {
     dot.data(interpolateData(year), key).call(position).sort(order);
-    label.text(Math.round(year));
+    gapminder.label.text(Math.round(year));
   }
 
   // Interpolates the dataset for the given (fractional) year.
