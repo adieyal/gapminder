@@ -5,6 +5,22 @@ function radius(d) { return d["Population"]; }
 function color(d) { return d["name"]; }
 function key(d) { return d["name"]; }
 
+var incomes = function(country) {
+    return country["Income level"].map(function(el) { return el[1]});
+}
+
+var ages = function(country) {
+    return country["Median age"].map(function(el) { return el[1]});
+}
+
+var populations = function(country) {
+    return country["Population"].map(function(el) { return el[1]});
+}
+var start_year = 2020;
+var end_year = 2050;
+
+var tweenYear, startAnimation;
+
 // Chart dimensions.
 var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 100},
     width = 960 - margin.right,
@@ -20,12 +36,32 @@ var xScale = d3.scale.log().domain([300, 1e5]).range([0, width]),
 var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
     yAxis = d3.svg.axis().scale(yScale).orient("left");
 
-// Create the SVG container and set the origin.
-var svg = d3.select("#chart").append("svg")
+
+var container = d3.select("#chart")
+var svg = container.append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var animating = false;
+
+container.append("button")
+    .text("Start")
+    .style("margin-left", margin.left + 'px')
+    .on("click", function(el) {
+        var button = d3.select(d3.event.srcElement);
+        if (!animating) {
+            startAnimation()
+            animating = true;
+            button.text("Stop");
+        } else {
+            stopAnimation()
+            animating = false;
+            button.text("Start");
+        }
+    })
+
 
 // Add the x-axis.
 svg.append("g")
@@ -55,10 +91,6 @@ svg.append("text")
     .attr("transform", "rotate(-90)")
     .text("Median age");
 
-var start_year = 2020;
-var end_year = 2050;
-
-// Add the year label; the value is set on transition.
 var label = svg.append("text")
     .attr("class", "year label")
     .attr("text-anchor", "end")
@@ -66,36 +98,13 @@ var label = svg.append("text")
     .attr("x", width)
     .text(start_year);
 
-var incomes = function(country) {
-    return country["Income level"].map(function(el) { return el[1]});
-}
-
-var ages = function(country) {
-    return country["Median age"].map(function(el) { return el[1]});
-}
-
-var populations = function(country) {
-    return country["Population"].map(function(el) { return el[1]});
-}
-
 // Load the data.
 d3.json("income.json", function(nations) {
 
-    min_income = d3.min(nations, function(nation) {
-        return d3.min(incomes(nation));
-    })
-
-    max_income = d3.max(nations, function(nation) {
-        return d3.max(incomes(nation));
-    })
-
-    min_age = d3.min(nations, function(nation) {
-        return d3.min(ages(nation));
-    })
-
-    max_age = d3.max(nations, function(nation) {
-        return d3.max(ages(nation));
-    })
+    min_income = d3.min(nations, function(nation) { return d3.min(incomes(nation)); })
+    max_income = d3.max(nations, function(nation) { return d3.max(incomes(nation)); })
+    min_age = d3.min(nations, function(nation) { return d3.min(ages(nation)); })
+    max_age = d3.max(nations, function(nation) { return d3.max(ages(nation)); })
 
     min_population = d3.min(nations, function(nation) {
         return d3.min(populations(nation));
@@ -134,14 +143,22 @@ d3.json("income.json", function(nations) {
         .attr("y", box.y)
         .attr("width", box.width)
         .attr("height", box.height)
-        .on("mouseover", enableInteraction);
+        //.on("mouseover", enableInteraction);
 
     // Start a transition that interpolates the data based on year.
-    svg.transition()
-        .duration(30000)
-        .ease("linear")
-        .tween("year", tweenYear)
-        .each("end", enableInteraction);
+    startAnimation = function() {
+        svg.transition()
+            .duration(30000)
+            .ease("linear")
+            .tween("year", tweenYear)
+            .each("end", enableInteraction);
+    }
+
+    stopAnimation = function() {
+        svg.transition();
+    }
+
+    startAnimation()
 
     // Positions the dots based on data.
     function position(dot) {
@@ -187,13 +204,13 @@ d3.json("income.json", function(nations) {
 
   // Tweens the entire chart by first tweening the year, and then the data.
   // For the interpolated data, the dots and label are redrawn.
-  function tweenYear() {
+  tweenYear = function() {
     var year = d3.interpolateNumber(start_year, end_year);
     return function(t) { displayYear(year(t)); };
   }
 
   // Updates the display to show the specified year.
-  function displayYear(year) {
+  displayYear = function(year) {
     dot.data(interpolateData(year), key).call(position).sort(order);
     label.text(Math.round(year));
   }
