@@ -34,6 +34,11 @@ text {
   fill: #ddd;
 }
 
+.country.label {
+  font: 500 40px "Helvetica Neue";
+  fill: #222;
+}
+
 .year.label.active {
   fill: #aaa;
 }
@@ -58,5 +63,6 @@ text {
 <script src="circles.js" charset="utf-8"></script>
 
 <script>
-load_data("income.csv", "Income level", "Median age", "Population", {start_year : 2020, end_year : 2050});
+load_data("income.csv", "Income level", "Median age", "Population", {start_year : 2020, end_year : 2050}, "Country", "Country stats");
+//load_data("fast_growth.csv", "Cost of service", "Market size ('m)", "Market value (' $ mn)", {start_year : 2020, end_year : 2050}, "Sector", "Market stats");
 </script>

@@ -56,9 +56,16 @@ var GapMinder = function(container, dataobj, years, properties) {
     this.label = this.svg.append("text")
         .attr("class", "year label")
         .attr("text-anchor", "end")
-        .attr("y", p.height - 24)
+        .attr("y", p.height - 84)
         .attr("x", p.width)
         .text(this.years.start_year);
+
+    this.country_label = this.svg.append("text")
+        .attr("class", "country label")
+        .attr("text-anchor", "end")
+        .attr("y", p.height - 44)
+        .attr("x", p.width)
+        .text("Click circles for info");
 }
 
 GapMinder.prototype = {
@@ -105,7 +112,10 @@ GapMinder.prototype = {
                     .attr("class", "dot")
                     .style("fill", function(d) { return colorScale(d.name); })
                     .call(this.position, this)
-                    .sort(this.order);
+                    .sort(this.order)
+                    .on("click", function(el) {
+                        self.country_label.text(el["name"])
+                    });
     },
 
     // Updates the display to show the specified year.
@@ -177,9 +187,9 @@ var StartButton = function(gapminder, container) {
         })
 }
 
-var load_data = function(csvfile, x_key, y_key, radius_key, years) {
+var load_data = function(csvfile, x_key, y_key, radius_key, years, country_key, indicator_key) {
     d3.csv(csvfile, function(data) {
-        var dataobj = new Data(data, x_key, y_key, radius_key, years)
+        var dataobj = new Data(data, x_key, y_key, radius_key, years, country_key, indicator_key)
 
         var gapminder = new GapMinder(container, dataobj, years, {
             width: width,

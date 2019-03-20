@@ -1,15 +1,14 @@
 
-var Data = function(data, x_key, y_key, radius_key, years, country_key) {
-    if (country_key === undefined)
-        this.country_key = "Country";
-    else
-        this.country_key = country_key;
+var Data = function(data, x_key, y_key, radius_key, years, country_key, indicator_key) {
 
     this.data = data;
     this.x_key = x_key;
     this.y_key = y_key;
     this.radius_key = radius_key;
     this.years = years;
+    this.country_key = country_key;
+    this.indicator_key = indicator_key;
+
     this.hash = this._init_data(data);
 
     this.x = {
@@ -61,7 +60,7 @@ Data.prototype = {
     _extract_stat : function(stat) {
         var self = this;
         stats = this.data.filter(function(datum) {
-            return datum["Country stats"] == stat;
+            return datum[self.indicator_key] == stat;
         });
 
         stats_array = stats.map(function(datum) {
