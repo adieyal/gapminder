@@ -42,7 +42,7 @@ var GapMinder = function(container, dataobj, years, properties) {
         .attr("text-anchor", "end")
         .attr("x", p.width)
         .attr("y", p.height - 6)
-        .text("Income level");
+        .text(p.x_axis_label);
 
     // Add a y-axis label.
     this.svg.append("text")
@@ -51,7 +51,7 @@ var GapMinder = function(container, dataobj, years, properties) {
         .attr("y", 6)
         .attr("dy", ".75em")
         .attr("transform", "rotate(-90)")
-        .text("Median age");
+        .text(p.y_axis_label);
 
     this.label = this.svg.append("text")
         .attr("class", "year label")
@@ -187,7 +187,7 @@ var StartButton = function(gapminder, container) {
         })
 }
 
-var load_data = function(csvfile, x_key, y_key, radius_key, years, country_key, indicator_key) {
+var load_data = function(csvfile, x_key, y_key, radius_key, years, country_key, indicator_key, x_axis_label, y_axis_label) {
     d3.csv(csvfile, function(data) {
         var dataobj = new Data(data, x_key, y_key, radius_key, years, country_key, indicator_key)
 
@@ -199,7 +199,9 @@ var load_data = function(csvfile, x_key, y_key, radius_key, years, country_key, 
                 x : d3.scale.log().domain([dataobj.x.min, dataobj.x.max]).range([10, width]),
                 y : d3.scale.linear().domain([dataobj.y.min, dataobj.y.max]).range([height, 10]),
                 radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([0, 40])
-            }
+            },
+            x_axis_label : x_axis_label,
+            y_axis_label : y_axis_label
         });
         var button = new StartButton(gapminder, container);
 
