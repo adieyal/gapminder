@@ -1,26 +1,3 @@
-// Various accessors that specify the four dimensions of data to visualize.
-function x(d) { return d["Income level"]; }
-function y(d) { return d["Median age"]; }
-function radius(d) { return d["Population"]; }
-function color(d) { return d["name"]; }
-function key(d) { return d["name"]; }
-
-var incomes = function(country) {
-    return country["Income level"].map(function(el) { return el[1]});
-}
-
-var ages = function(country) {
-    return country["Median age"].map(function(el) { return el[1]});
-}
-
-var populations = function(country) {
-    return country["Population"].map(function(el) { return el[1]});
-}
-
-var years = {
-    start_year: 2020,
-    end_year : 2050
-}
 
 // Chart dimensions.
 var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 100},
@@ -108,14 +85,14 @@ GapMinder.prototype = {
     position : function(dot, gapminder) {
         self = gapminder;
         dot
-          .attr("cx", function(d) { return self.scales.x(x(d)); })
-          .attr("cy", function(d) { return self.scales.y(y(d)); })
-          .attr("r", function(d) { return self.scales.radius(radius(d)); });
+          .attr("cx", function(d) { return self.scales.x(d.x); })
+          .attr("cy", function(d) { return self.scales.y(d.y); })
+          .attr("r", function(d) { return self.scales.radius(d.radius); });
     },
 
     // Defines a sort order so that the smallest dots are drawn on top.
     order : function(a, b) {
-      return radius(b) - radius(a);
+      return b.radius - a.radius;
     },
 
     initCircles : function() {
@@ -126,7 +103,7 @@ GapMinder.prototype = {
                 .data(this.interpolateData(this.years.start_year))
                 .enter().append("circle")
                     .attr("class", "dot")
-                    .style("fill", function(d) { return colorScale(color(d)); })
+                    .style("fill", function(d) { return colorScale(d.name); })
                     .call(this.position, this)
                     .sort(this.order);
     },
@@ -134,17 +111,19 @@ GapMinder.prototype = {
     // Updates the display to show the specified year.
     displayYear : function(year) {
 
-            this.dot.data(this.interpolateData(year), key).call(this.position, this).sort(this.order);
-            this.label.text(Math.round(year));
-            // Add a title.
-            this.dot.append("title").text(key);
-        },
+        this.dot.data(this.interpolateData(year)).call(this.position, this).sort(this.order);
+        this.label.text(Math.round(year));
+        // Add a title.
+        this.dot.append("title").text(key);
+    },
 
 
     // Interpolates the dataset for the given (fractional) year.
     interpolateData : function(year) {
         // A bisector since many nation's data is sparsely-defined.
-        var bisect = d3.bisector(function(d) { return d[0]; });
+        var bisect = d3.bisector(function(d) {
+            return d[0];
+        });
 
         // Finds (and possibly interpolates) the value for the specified year.
         function interpolateValues(values, year) {
@@ -158,18 +137,23 @@ GapMinder.prototype = {
             return a[1];
         }
 
-        return this.dataobj.data.map(function(d) {
-          return {
-            name: key(d),
-            colour: color(d),
-            "Income level": interpolateValues(x(d), year),
-            "Median age": interpolateValues(y(d), year),
-            "Population": interpolateValues(d["Population"], year)
-          };
-        });
-  }
-
-
+        year_data = [];
+        var hash = this.dataobj.hash;
+        var countries = Object.keys(hash);
+        for (idx in countries) {
+            year_idx = year - years.start_year;
+            country = countries[idx];
+            country_data = hash[country];
+            year_data.push({
+                name: country,
+                colour: country,
+                x: interpolateValues(country_data[this.dataobj.x.key], year),
+                y: interpolateValues(country_data[this.dataobj.y.key], year),
+                radius: interpolateValues(country_data[this.dataobj.radius.key], year)
+            })
+        }
+        return year_data
+    }
 }
 
 var StartButton = function(gapminder, container) {
@@ -190,41 +174,11 @@ var StartButton = function(gapminder, container) {
                 button.text("Start");
             }
         })
-
 }
 
-var Data = function(data) {
-    this.data = data;
-}
-
-Data.prototype = {
-    min_income : function() {
-        return d3.min(this.data, function(datum) { return d3.min(incomes(datum)); })
-    },
-
-    max_income : function() {
-        return d3.max(this.data, function(datum) { return d3.max(incomes(datum)); })
-    },
-
-    min_age : function() {
-        return d3.min(this.data, function(datum) { return d3.min(ages(datum)); })
-    },
-
-    max_age : function() {
-        return d3.max(this.data, function(datum) { return d3.max(ages(datum)); })
-    },
-
-    min_population : function() {
-        return d3.min(this.data, function(datum) { return d3.min(populations(datum)); })
-    },
-
-    max_population : function() {
-        return d3.max(this.data, function(datum) { return d3.max(populations(datum)); })
-    }
-}
 
 // Load the data.
-d3.json("income.json", function(data) {
+d3.csv("income.csv", function(data) {
     var dataobj = new Data(data)
 
     var gapminder = new GapMinder(container, dataobj, years, {
@@ -232,9 +186,9 @@ d3.json("income.json", function(data) {
         height: height,
         margin: margin,
         scales : {
-            x : d3.scale.log().domain([dataobj.min_income(), dataobj.max_income()]).range([10, width]),
-            y : d3.scale.linear().domain([dataobj.min_age(), dataobj.max_age()]).range([height, 10]),
-            radius : d3.scale.sqrt().domain([dataobj.min_population(), dataobj.max_population()]).range([0, 40])
+            x : d3.scale.log().domain([dataobj.x.min, dataobj.x.max]).range([10, width]),
+            y : d3.scale.linear().domain([dataobj.y.min, dataobj.y.max]).range([height, 10]),
+            radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([0, 40])
         }
     });
     var button = new StartButton(gapminder, container);
