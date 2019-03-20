@@ -111,6 +111,7 @@ GapMinder.prototype = {
     // Updates the display to show the specified year.
     displayYear : function(year) {
 
+        function key(d) { return d["name"]; }
         this.dot.data(this.interpolateData(year)).call(this.position, this).sort(this.order);
         this.label.text(Math.round(year));
         // Add a title.
@@ -141,7 +142,7 @@ GapMinder.prototype = {
         var hash = this.dataobj.hash;
         var countries = Object.keys(hash);
         for (idx in countries) {
-            year_idx = year - years.start_year;
+            year_idx = year - this.years.start_year;
             country = countries[idx];
             country_data = hash[country];
             year_data.push({
@@ -176,25 +177,23 @@ var StartButton = function(gapminder, container) {
         })
 }
 
+var load_data = function(csvfile, x_key, y_key, radius_key, years) {
+    d3.csv(csvfile, function(data) {
+        var dataobj = new Data(data, x_key, y_key, radius_key, years)
 
-// Load the data.
-d3.csv("income.csv", function(data) {
-    var dataobj = new Data(data)
+        var gapminder = new GapMinder(container, dataobj, years, {
+            width: width,
+            height: height,
+            margin: margin,
+            scales : {
+                x : d3.scale.log().domain([dataobj.x.min, dataobj.x.max]).range([10, width]),
+                y : d3.scale.linear().domain([dataobj.y.min, dataobj.y.max]).range([height, 10]),
+                radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([0, 40])
+            }
+        });
+        var button = new StartButton(gapminder, container);
 
-    var gapminder = new GapMinder(container, dataobj, years, {
-        width: width,
-        height: height,
-        margin: margin,
-        scales : {
-            x : d3.scale.log().domain([dataobj.x.min, dataobj.x.max]).range([10, width]),
-            y : d3.scale.linear().domain([dataobj.y.min, dataobj.y.max]).range([height, 10]),
-            radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([0, 40])
-        }
-    });
-    var button = new StartButton(gapminder, container);
-
-    gapminder.initCircles();
-    gapminder.startAnimation()
-
-
-});
+        gapminder.initCircles();
+        gapminder.startAnimation()
+    })
+};
