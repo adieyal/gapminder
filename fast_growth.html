@@ -61,6 +61,19 @@ text {
 <script src="incomedata.js" charset="utf-8"></script>
 <script src="circles.js" charset="utf-8"></script>
 
+var load_data = function(csvfile, x_key, y_key, radius_key, years, country_key, indicator_key, x_axis_label, y_axis_label) {
 <script>
-load_data("fast_growth.csv", "Cost of service", "Market size ('m)", "Market value (' $ mn)", {start_year : 2020, end_year : 2050}, "Sector", "Market stats", "Cost of service", "Market size");
+load_data("fast_growth.csv", {
+    x_key: "Cost of service",
+    y_key: "Market size ('m)",
+    radius_key: "Market value (' $ mn)", 
+    years: {
+        start_year : 2020,
+        end_year : 2050
+    },
+    country_key: "Sector",
+    indicator_key: "Market stats",
+    x_axis_label: "Cost of service",
+    y_axis_label: "Market size"
+});
 </script>

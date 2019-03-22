@@ -62,5 +62,17 @@ text {
 <script src="circles.js" charset="utf-8"></script>
 
 <script>
-load_data("income.csv", "Income level", "Median age", "Population", {start_year : 2020, end_year : 2050}, "Country", "Country stats", "Income", "Median age");
+load_data("income.csv", {
+    x_key: "Income level",
+    y_key: "Median age",
+    radius_key: "Population", 
+    years: {
+        start_year : 2020,
+        end_year : 2050
+    },
+    country_key: "Country",
+    indicator_key: "Country stats",
+    x_axis_label: "Income",
+    y_axis_label: "Median age"
+});
 </script>

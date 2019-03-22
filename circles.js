@@ -187,11 +187,11 @@ var StartButton = function(gapminder, container) {
         })
 }
 
-var load_data = function(csvfile, x_key, y_key, radius_key, years, country_key, indicator_key, x_axis_label, y_axis_label) {
+var load_data = function(csvfile, params) {
     d3.csv(csvfile, function(data) {
-        var dataobj = new Data(data, x_key, y_key, radius_key, years, country_key, indicator_key)
+        var dataobj = new Data(data, params.x_key, params.y_key, params.radius_key, params.years, params.country_key, params.indicator_key)
 
-        var gapminder = new GapMinder(container, dataobj, years, {
+        var gapminder = new GapMinder(container, dataobj, params.years, {
             width: width,
             height: height,
             margin: margin,
@@ -200,8 +200,8 @@ var load_data = function(csvfile, x_key, y_key, radius_key, years, country_key, 
                 y : d3.scale.linear().domain([dataobj.y.min, dataobj.y.max]).range([height, 10]),
                 radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([0, 40])
             },
-            x_axis_label : x_axis_label,
-            y_axis_label : y_axis_label
+            x_axis_label : params.x_axis_label,
+            y_axis_label : params.y_axis_label
         });
         var button = new StartButton(gapminder, container);
 
