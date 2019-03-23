@@ -4,7 +4,7 @@ var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 100},
     width = 1024 - margin.right,
     height = 500 - margin.top - margin.bottom;
 
-// Various scales. These domains make assumptions of data, naturally.
+
 var colorScale = d3.scale.category10();
 
 var container = d3.select("#chart")
@@ -29,18 +29,15 @@ var GapMinder = function(container, dataobj, years, properties) {
     this.graph = this.svg.append("g")
     
 
-    // Add the x-axis.
     this.graph.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + (p.height) + ")")
         .call(xAxis);
 
-    // Add the y-axis.
     this.graph.append("g")
         .attr("class", "y axis")
         .call(yAxis)
 
-    // Add an x-axis label.
     this.svg.append("text")
         .attr("class", "x label")
         .attr("text-anchor", "middle")
@@ -49,7 +46,6 @@ var GapMinder = function(container, dataobj, years, properties) {
         .text(p.x_axis_label)
         .classed("x-axis-label", true);
 
-    // Add a y-axis label.
     this.svg.append("text")
         .attr("class", "y label")
         .attr("text-anchor", "middle")
@@ -87,7 +83,6 @@ GapMinder.prototype = {
             .tween("year", tweenYear)
     },
 
-    // Positions the dots based on data.
     position : function(dot, gapminder) {
         self = gapminder;
         dot
@@ -132,7 +127,6 @@ GapMinder.prototype = {
                     .call(this.position_label, this)
     },
 
-    // Updates the display to show the specified year.
     displayYear : function(year) {
         this.current_year = year;
 
