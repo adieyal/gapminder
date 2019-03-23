@@ -1,7 +1,7 @@
 
 // Chart dimensions.
 var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 100},
-    width = 960 - margin.right,
+    width = 1024 - margin.right,
     height = 500 - margin.top - margin.bottom;
 
 // Various scales. These domains make assumptions of data, naturally.
@@ -15,6 +15,7 @@ var GapMinder = function(container, dataobj, years, properties) {
     this.scales = p.scales;
     this.years = years;
     this.dataobj = dataobj;
+    this.current_year = this.years.start_year;
 
     var xAxis = d3.svg.axis().orient("bottom").scale(this.scales.x).ticks(12, d3.format(",d")),
         yAxis = d3.svg.axis().scale(this.scales.y).orient("left");
@@ -25,47 +26,47 @@ var GapMinder = function(container, dataobj, years, properties) {
         .append("g")
             .attr("transform", "translate(" + p.margin.left + "," + p.margin.top + ")");
 
+    this.graph = this.svg.append("g")
+    
+
     // Add the x-axis.
-    this.svg.append("g")
+    this.graph.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," + p.height + ")")
+        .attr("transform", "translate(0," + (p.height) + ")")
         .call(xAxis);
 
     // Add the y-axis.
-    this.svg.append("g")
+    this.graph.append("g")
         .attr("class", "y axis")
-        .call(yAxis);
+        .call(yAxis)
 
     // Add an x-axis label.
     this.svg.append("text")
         .attr("class", "x label")
-        .attr("text-anchor", "end")
-        .attr("x", p.width)
-        .attr("y", p.height - 6)
-        .text(p.x_axis_label);
+        .attr("text-anchor", "middle")
+        .attr("x", p.width / 2)
+        .attr("y", p.height)
+        .text(p.x_axis_label)
+        .classed("x-axis-label", true);
 
     // Add a y-axis label.
     this.svg.append("text")
         .attr("class", "y label")
-        .attr("text-anchor", "end")
-        .attr("y", 6)
-        .attr("dy", ".75em")
+        .attr("text-anchor", "middle")
+        .attr("y",0)
+        .attr("x", -p.height / 2)
         .attr("transform", "rotate(-90)")
-        .text(p.y_axis_label);
+        .text(p.y_axis_label)
+        .classed("y-axis-label", true);
 
-    this.label = this.svg.append("text")
+    this.label = this.graph.append("text")
         .attr("class", "year label")
-        .attr("text-anchor", "end")
-        .attr("y", p.height - 84)
-        .attr("x", p.width)
-        .text(this.years.start_year);
-
-    this.country_label = this.svg.append("text")
-        .attr("class", "country label")
-        .attr("text-anchor", "end")
-        .attr("y", p.height - 44)
-        .attr("x", p.width)
-        .text("Click circles for info");
+        .attr("text-anchor", "middle")
+        .attr("y", p.height / 2)
+        .attr("dy", "0.25em")
+        .attr("x", p.width / 2)
+        .text(this.years.start_year)
+        .classed("year-label", true);
 }
 
 GapMinder.prototype = {
@@ -75,12 +76,10 @@ GapMinder.prototype = {
 
     startAnimation : function() {
         var self = this;
-      // Tweens the entire chart by first tweening the year, and then the data.
-      // For the interpolated data, the dots and label are redrawn.
-      tweenYear = function() {
-        var year = d3.interpolateNumber(self.years.start_year, self.years.end_year);
-        return function(t) { self.displayYear(year(t)); };
-      }
+        tweenYear = function() {
+            var year = d3.interpolateNumber(self.current_year, self.years.end_year);
+            return function(t) { self.displayYear(year(t)); };
+        }
 
         this.svg.transition()
             .duration(30000)
@@ -97,6 +96,13 @@ GapMinder.prototype = {
           .attr("r", function(d) { return self.scales.radius(d.radius); });
     },
 
+    position_label : function(dot, gapminder) {
+        self = gapminder;
+        dot
+          .attr("x", function(d) { return self.scales.x(d.x); })
+          .attr("y", function(d) { return self.scales.y(d.y); })
+    },
+
     // Defines a sort order so that the smallest dots are drawn on top.
     order : function(a, b) {
       return b.radius - a.radius;
@@ -104,7 +110,7 @@ GapMinder.prototype = {
 
     initCircles : function() {
         // Add a dot per nation. Initialize the data at start_year, and set the colors.
-        this.dot = this.svg.append("g")
+        this.dot = this.graph.append("g")
             .attr("class", "dots")
             .selectAll(".dot")
                 .data(this.interpolateData(this.years.start_year))
@@ -113,19 +119,28 @@ GapMinder.prototype = {
                     .style("fill", function(d) { return colorScale(d.name); })
                     .call(this.position, this)
                     .sort(this.order)
-                    .on("click", function(el) {
-                        self.country_label.text(el["name"])
-                    });
+
+        this.labels = this.graph.append("g")
+            .attr("class", "labels")
+            .selectAll(".label")
+                .data(this.interpolateData(this.years.start_year))
+                .enter().append("text")
+                    .attr("class", "label")
+                    .text(function(d) {
+                        return d.name
+                    })
+                    .call(this.position_label, this)
     },
 
     // Updates the display to show the specified year.
     displayYear : function(year) {
+        this.current_year = year;
 
         function key(d) { return d["name"]; }
         this.dot.data(this.interpolateData(year)).call(this.position, this).sort(this.order);
         this.label.text(Math.round(year));
+        this.labels.data(this.interpolateData(year)).call(this.position_label, this)
         // Add a title.
-        this.dot.append("title").text(key);
     },
 
 
@@ -168,22 +183,49 @@ GapMinder.prototype = {
 }
 
 var StartButton = function(gapminder, container) {
-    animating = false;
+
+    animating = true;
+    
+    var reset = function() {
+        pause();
+        gapminder.current_year = gapminder.years.start_year;
+
+        start();
+    }
+
+    var start = function() {
+        animating = true;
+        gapminder.startAnimation()
+    }
+
+    var pause = function() {
+        animating = false;
+        gapminder.stopAnimation()
+    }
+
+
+    container.append("br")
+
+    var startStop = container.append("button")
+        .text("Pause")
+        .style("margin-left", margin.left + 'px')
+        .style("margin-top", margin.top + 'px')
+        .on("click", function() {
+            var button = d3.select(this);
+            if (!animating) {
+                button.text("Pause");
+                start();
+            } else {
+                button.text("Start");
+                pause()
+            }
+        })
 
     container.append("button")
-        .text("Start")
-        .style("margin-left", margin.left + 'px')
+        .text("Reset")
         .on("click", function(el) {
-            var button = d3.select(d3.event.srcElement);
-            if (!animating) {
-                gapminder.startAnimation()
-                animating = true;
-                button.text("Stop");
-            } else {
-                gapminder.stopAnimation()
-                animating = false;
-                button.text("Start");
-            }
+            reset();
+            startStop.text("Pause");
         })
 }
 
@@ -196,7 +238,7 @@ var load_data = function(csvfile, params) {
             height: height,
             margin: margin,
             scales : {
-                x : d3.scale.log().domain([dataobj.x.min, dataobj.x.max]).range([10, width]),
+                x : d3.scale.linear().domain([dataobj.x.min, dataobj.x.max]).range([10, width]),
                 y : d3.scale.linear().domain([dataobj.y.min, dataobj.y.max]).range([height, 10]),
                 radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([0, 40])
             },
