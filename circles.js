@@ -2,7 +2,9 @@
 // Chart dimensions.
 var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 100},
     width = 1024 - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    height = 500 - margin.top - margin.bottom,
+    y_axis_margin = 60,
+    x_axis_margin = 65;
 
 
 var colorScale = d3.scale.category10();
@@ -28,14 +30,14 @@ var GapMinder = function(container, dataobj, years, properties) {
 
     this.graph = this.svg.append("g")
     
-
     this.graph.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," + (p.height) + ")")
+        .attr("transform", "translate(0," + (p.height - x_axis_margin) + ")")
         .call(xAxis);
 
     this.graph.append("g")
         .attr("class", "y axis")
+        .attr("transform", "translate(" + y_axis_margin + ")")
         .call(yAxis)
 
     this.svg.append("text")
@@ -134,7 +136,6 @@ GapMinder.prototype = {
         this.dot.data(this.interpolateData(year)).call(this.position, this).sort(this.order);
         this.label.text(Math.round(year));
         this.labels.data(this.interpolateData(year)).call(this.position_label, this)
-        // Add a title.
     },
 
 
@@ -232,8 +233,8 @@ var load_data = function(csvfile, params) {
             height: height,
             margin: margin,
             scales : {
-                x : d3.scale.linear().domain([dataobj.x.min, dataobj.x.max]).range([10, width]),
-                y : d3.scale.linear().domain([dataobj.y.min, dataobj.y.max]).range([height, 10]),
+                x : d3.scale.linear().domain([dataobj.x.min, dataobj.x.max]).range([y_axis_margin, width]),
+                y : d3.scale.linear().domain([dataobj.y.min, dataobj.y.max]).range([height - x_axis_margin, 10]),
                 radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([0, 40])
             },
             x_axis_label : params.x_axis_label,
