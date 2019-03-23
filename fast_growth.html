@@ -31,6 +31,19 @@ load_data("fast_growth.csv", {
     country_key: "Sector",
     indicator_key: "Market stats",
     x_axis_label: "Cost of service",
-    y_axis_label: "Market value"
+    y_axis_label: "Market value",
+    func_label: function(d) {
+        return d.name + "(" + d.additional_data + "%)";
+    },
+    additional_data: {
+        "Education" : 1.13,
+        "Private Healthcare" : 4.59,
+        "Consumer technology" : 5.66,
+        "Financial services" : 14.07,
+        "Agriculture" : 4.56,
+        "Retail - high end" : 7.04,
+        "Fashion & beauty" : 13.53,
+        "Clothing & Footwear" : 7.19,
+    }
 });
 </script>

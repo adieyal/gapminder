@@ -14,6 +14,7 @@ var container = d3.select("#chart")
 var GapMinder = function(container, dataobj, years, properties) {
     var p = properties;
 
+    this.p = p;
     this.scales = p.scales;
     this.years = years;
     this.dataobj = dataobj;
@@ -114,6 +115,8 @@ GapMinder.prototype = {
     },
 
     initCircles : function() {
+        var self = this;
+
         // Add a dot per nation. Initialize the data at start_year, and set the colors.
         this.dot = this.graph.append("g")
             .attr("class", "dots")
@@ -132,9 +135,7 @@ GapMinder.prototype = {
                 .enter().append("text")
                     .attr("class", "label")
                     .attr("text-anchor", "middle")
-                    .text(function(d) {
-                        return d.name
-                    })
+                    .text(self.p.func_label)
                     .call(this.position_label, this)
     },
 
@@ -178,7 +179,8 @@ GapMinder.prototype = {
                 colour: country,
                 x: interpolateValues(country_data[this.dataobj.x.key], year),
                 y: interpolateValues(country_data[this.dataobj.y.key], year),
-                radius: interpolateValues(country_data[this.dataobj.radius.key], year)
+                radius: interpolateValues(country_data[this.dataobj.radius.key], year),
+                additional_data : this.p.additional_data[country],
             })
         }
         return year_data
@@ -237,6 +239,8 @@ var load_data = function(csvfile, params) {
     var min_x = params.min_x ? params.min_x : 0;
     var min_radius = params.min_radius ? params.min_radius : 5;
     var max_radius = params.max_radius ? params.max_radius : 40;
+    var func_label = params.func_label ? params.func_label : function(d) { return d.name; };
+    var additional_data = params.additional_data ? params.additional_data : {};
 
     d3.csv(csvfile, function(data) {
         var dataobj = new Data(data, params.x_key, params.y_key, params.radius_key, params.years, params.country_key, params.indicator_key)
@@ -251,7 +255,9 @@ var load_data = function(csvfile, params) {
                 radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([min_radius, max_radius])
             },
             x_axis_label : params.x_axis_label,
-            y_axis_label : params.y_axis_label
+            y_axis_label : params.y_axis_label,
+            func_label : func_label,
+            additional_data : additional_data
         });
         var button = new StartButton(gapminder, container);
 
