@@ -141,7 +141,6 @@ GapMinder.prototype = {
     displayYear : function(year) {
         this.current_year = year;
 
-        function key(d) { return d["name"]; }
         this.dot.data(this.interpolateData(year)).call(this.position, this).sort(this.order);
         this.label.text(Math.round(year));
         this.labels.data(this.interpolateData(year)).call(this.position_label, this)
