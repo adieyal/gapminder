@@ -98,6 +98,14 @@ GapMinder.prototype = {
         dot
           .attr("x", function(d) { return self.scales.x(d.x); })
           .attr("y", function(d) { return self.scales.y(d.y); })
+          .style("display", function(d) {
+              if (self.scales.radius(d.radius) < 10) {
+                  return "none"
+              }
+              return "block"
+          })
+
+        
     },
 
     // Defines a sort order so that the smallest dots are drawn on top.
@@ -123,6 +131,7 @@ GapMinder.prototype = {
                 .data(this.interpolateData(this.years.start_year))
                 .enter().append("text")
                     .attr("class", "label")
+                    .attr("text-anchor", "middle")
                     .text(function(d) {
                         return d.name
                     })
@@ -225,6 +234,11 @@ var StartButton = function(gapminder, container) {
 }
 
 var load_data = function(csvfile, params) {
+    var min_y = params.min_y ? params.min_y : 0;
+    var min_x = params.min_x ? params.min_x : 0;
+    var min_radius = params.min_radius ? params.min_radius : 5;
+    var max_radius = params.max_radius ? params.max_radius : 40;
+
     d3.csv(csvfile, function(data) {
         var dataobj = new Data(data, params.x_key, params.y_key, params.radius_key, params.years, params.country_key, params.indicator_key)
 
@@ -233,9 +247,9 @@ var load_data = function(csvfile, params) {
             height: height,
             margin: margin,
             scales : {
-                x : d3.scale.linear().domain([dataobj.x.min, dataobj.x.max]).range([y_axis_margin, width]),
-                y : d3.scale.linear().domain([dataobj.y.min, dataobj.y.max]).range([height - x_axis_margin, 10]),
-                radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([0, 40])
+                x : d3.scale.linear().domain([min_x, dataobj.x.max]).range([y_axis_margin, width]).nice(),
+                y : d3.scale.linear().domain([min_y, dataobj.y.max]).range([height - x_axis_margin, 10]).nice(),
+                radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([min_radius, max_radius])
             },
             x_axis_label : params.x_axis_label,
             y_axis_label : params.y_axis_label
