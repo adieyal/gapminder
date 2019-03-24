@@ -53,7 +53,7 @@ var GapMinder = function(container, dataobj, years, properties) {
         .attr("class", "y label")
         .attr("text-anchor", "middle")
         .attr("y",0)
-        .attr("x", -p.height / 2)
+        .attr("x", (-p.height  + x_axis_margin) / 2)
         .attr("transform", "rotate(-90)")
         .text(p.y_axis_label)
         .classed("y-axis-label", true);
