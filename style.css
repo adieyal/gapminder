@@ -49,7 +49,7 @@ text {
 
 #chart .y-axis-label, #chart .x-axis-label {
     text-transform: uppercase;
-    font-size: 1.2em;
+    font-size: 1.4em;
     stroke: #1C454C;
     fill: #1C454C;
 }
