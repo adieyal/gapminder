@@ -6,13 +6,70 @@
 
 @import url(style.css);
 
+#flex-container {
+    display: flex;
+}
+
+#world-trends {
+    width: 300px;
+    height: 435px;
+    background-color: #1E2F33;
+    color: white;
+    font-family: "Helvetica";
+}
+
+#world-trends tr {
+    border-bottom: 5px solid white;
+}
+
+#world-trends td {
+    padding-bottom: 10px;
+    padding-top: 10px;
+    border-bottom: solid 2px white;
+}
+
+#world-trends table {
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
 </style>
 
 <h1>Fast growth markets</h1>
 
-<p id="chart">
-
-</p>
+<div id="flex-container">
+    <p id="chart"></p>
+    <div id="world-trends">
+        <table>
+            <tr>
+                <td>Global Fashion</td>
+                <td>1,300</td>
+            </tr>
+            <tr>
+                <td>Global Smartphone</td>
+                <td>522</td>
+            </tr>
+            <tr>
+                <td>Western EU fashion</td>
+                <td>299</td>
+            </tr>
+            <tr>
+                <td>US Apparel and<br> footwear market</td>
+                <td>292</td>
+            </tr>
+            <tr>
+                <td>Western Europe smartphone</td>
+                <td>84</td>
+            </tr>
+            <tr>
+                <td>US car trade</td>
+                <td>20</td>
+            </tr>
+        </table>
+    </div>
+</div>
 
 <!--<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>-->
 <script src="d3.min.js" charset="utf-8"></script>
