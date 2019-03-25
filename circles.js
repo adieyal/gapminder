@@ -11,6 +11,48 @@ var colorScale = d3.scale.category10();
 
 var container = d3.select("#chart")
 
+// Finds (and possibly interpolates) the value for the specified year.
+function interpolateValues(values, year) {
+    var bisect = d3.bisector(function(d) {
+        return d[0];
+    });
+
+    var i = bisect.left(values, year, 0, values.length - 1),
+        a = values[i];
+    if (i > 0) {
+      var b = values[i - 1],
+          t = (year - a[0]) / (b[0] - a[0]);
+      return a[1] * (1 - t) + b[1] * t;
+    }
+    return a[1];
+}
+
+var BubbleLabel = function(gapminder, parameters) {
+    this.gapminder = gapminder;
+    this.p = parameters; 
+    this.name = this.p.name;
+    this.colour = this.p.colour;
+    this.x = this.p.x;
+    this.y = this.p.y;
+    this.radius = this.p.radius;
+    this.additional_data = this.p.additional_data;
+    this.is_hidden = true;
+}
+
+BubbleLabel.prototype = {
+    update : function(x, y, radius) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+    },
+
+    hidden : function() {
+        if (this.is_hidden && this.gapminder.scales.radius(this.radius) < 10)
+            return true;
+        return false;
+    }
+}
+
 var GapMinder = function(container, dataobj, years, properties) {
     var p = properties;
 
@@ -97,16 +139,12 @@ GapMinder.prototype = {
     position_label : function(dot, gapminder) {
         self = gapminder;
         dot
-          .attr("x", function(d) { return self.scales.x(d.x); })
+          .attr("x", function(d) {
+              return self.scales.x(d.x); })
           .attr("y", function(d) { return self.scales.y(d.y); })
-          .style("display", function(d) {
-              if (self.scales.radius(d.radius) < 10) {
-                  return "none"
-              }
-              return "block"
+          .classed("hidden", function(d) {
+              return d.hidden();
           })
-
-        
     },
 
     // Defines a sort order so that the smallest dots are drawn on top.
@@ -116,22 +154,36 @@ GapMinder.prototype = {
 
     initCircles : function() {
         var self = this;
+        this.bubble_labels = []
+        var interpolated_data = this.interpolateData(this.years.start_year);
+        for (idx in interpolated_data) {
+            var datum = interpolated_data[idx];
+            this.bubble_labels.push(new BubbleLabel(this, datum));
+        }
 
         // Add a dot per nation. Initialize the data at start_year, and set the colors.
         this.dot = this.graph.append("g")
             .attr("class", "dots")
             .selectAll(".dot")
-                .data(this.interpolateData(this.years.start_year))
+                .data(this.bubble_labels)
                 .enter().append("circle")
                     .attr("class", "dot")
-                    .style("fill", function(d) { return colorScale(d.name); })
+                    .style("fill", function(d) {
+                        return colorScale(d.name); })
                     .call(this.position, this)
                     .sort(this.order)
+                    .on("mouseover", function() {
+                        this.__data__.is_hidden = false;
+                        console.log(this);
+                    })
+                    .on("mouseout", function() {
+                        this.__data__.is_hidden = true;
+                    })
 
         this.labels = this.graph.append("g")
             .attr("class", "labels")
             .selectAll(".label")
-                .data(this.interpolateData(this.years.start_year))
+                .data(this.bubble_labels)
                 .enter().append("text")
                     .attr("class", "label")
                     .attr("text-anchor", "middle")
@@ -140,32 +192,21 @@ GapMinder.prototype = {
     },
 
     displayYear : function(year) {
+        var interpolated_data = this.interpolateData(year);
+        for (idx in interpolated_data) {
+            var datum = interpolated_data[idx];
+            this.bubble_labels[idx].update(datum.x, datum.y, datum.radius)
+        }
         this.current_year = year;
-
-        this.dot.data(this.interpolateData(year)).call(this.position, this).sort(this.order);
+        
+        this.dot.data(this.bubble_labels).call(this.position, this).sort(this.order);
         this.label.text(Math.round(year));
-        this.labels.data(this.interpolateData(year)).call(this.position_label, this)
+        this.labels.data(this.bubble_labels).call(this.position_label, this)
     },
 
 
     // Interpolates the dataset for the given (fractional) year.
     interpolateData : function(year) {
-        // A bisector since many nation's data is sparsely-defined.
-        var bisect = d3.bisector(function(d) {
-            return d[0];
-        });
-
-        // Finds (and possibly interpolates) the value for the specified year.
-        function interpolateValues(values, year) {
-            var i = bisect.left(values, year, 0, values.length - 1),
-                a = values[i];
-            if (i > 0) {
-              var b = values[i - 1],
-                  t = (year - a[0]) / (b[0] - a[0]);
-              return a[1] * (1 - t) + b[1] * t;
-            }
-            return a[1];
-        }
 
         year_data = [];
         var hash = this.dataobj.hash;
