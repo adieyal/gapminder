@@ -282,10 +282,10 @@ var StartButton = function(gapminder, container) {
 
 
     container.append("br")
+    buttonGroup = container.append("div").style("text-align", "center")
 
-    btnStartStop = container.append("button")
+    btnStartStop = buttonGroup.append("button")
         .style("margin-left", margin.left + 'px')
-        .style("margin-top", margin.top + 'px')
         .on("click", function() {
             var button = d3.select(this);
             if (!animating) {
@@ -297,7 +297,7 @@ var StartButton = function(gapminder, container) {
 
     btnStartStop.append("img")
 
-    btnRestart = container.append("button")
+    btnRestart = buttonGroup.append("button")
         .style("margin-left", '5px')
         .on("click", function(el) {
             reset();
