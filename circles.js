@@ -86,7 +86,7 @@ var GapMinder = function(container, dataobj, years, properties) {
     this.svg.append("text")
         .attr("class", "x label")
         .attr("text-anchor", "middle")
-        .attr("x", p.width / 2)
+        .attr("x", this.scales.x(p.graph_width / 2))
         .attr("y", p.height)
         .text(p.x_axis_label)
         .classed("x-axis-label", true);
