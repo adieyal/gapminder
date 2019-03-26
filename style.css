@@ -4,6 +4,11 @@ html {
   min-width: 1040px;
 }
 
+h1 {
+    font: 40px sans-serif;
+    text-align: center;
+}
+
 #chart {
   margin-left: -40px;
   height: 506px;
@@ -69,4 +74,9 @@ line.world-markets {
 
 #chart button {
     border: none;
+}
+
+#chart #button-group {
+    text-align: left;
+    margin-left: 45px;
 }

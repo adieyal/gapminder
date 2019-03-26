@@ -66,7 +66,8 @@ var GapMinder = function(container, dataobj, years, properties) {
         yAxis = d3.svg.axis().scale(this.scales.y).orient("left");
 
     this.svg = container.append("svg")
-        .attr("width", p.width + p.margin.left + p.margin.right)
+        //.attr("width", p.width + p.margin.left + p.margin.right)
+        .attr("width", "100%")
         .attr("height", p.height + p.margin.top + p.margin.bottom)
         .append("g")
             .attr("transform", "translate(" + p.margin.left + "," + p.margin.top + ")");
@@ -282,7 +283,7 @@ var StartButton = function(gapminder, container) {
 
 
     container.append("br")
-    buttonGroup = container.append("div").style("text-align", "center")
+    buttonGroup = container.append("div").attr("id", "button-group")
 
     btnStartStop = buttonGroup.append("button")
         .style("margin-left", margin.left + 'px')
