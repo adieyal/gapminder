@@ -144,6 +144,7 @@ GapMinder.prototype = {
             return function(t) { self.displayYear(year(t)); };
         }
 
+        this.svg.interrupt();
         this.svg.transition()
             .duration(30000)
             .ease("linear")
@@ -200,7 +201,6 @@ GapMinder.prototype = {
                     .sort(this.order)
                     .on("mouseover", function() {
                         this.__data__.is_hidden = false;
-                        console.log(this);
                     })
                     .on("mouseout", function() {
                         this.__data__.is_hidden = true;
@@ -256,10 +256,13 @@ GapMinder.prototype = {
 
 var StartButton = function(gapminder, container) {
 
-    animating = true;
+    var btnStartStop, btnRestart;
+    var animating;
     
     var reset = function() {
-        pause();
+        if (animating) {
+            pause()
+        }
         gapminder.current_year = gapminder.years.start_year;
 
         start();
@@ -268,37 +271,41 @@ var StartButton = function(gapminder, container) {
     var start = function() {
         animating = true;
         gapminder.startAnimation()
+        btnStartStop.select("img").attr("src", "icon_pause.svg")
     }
 
     var pause = function() {
         animating = false;
         gapminder.stopAnimation()
+        btnStartStop.select("img").attr("src", "icon_play.svg")
     }
 
 
     container.append("br")
 
-    var startStop = container.append("button")
-        .text("Pause")
+    btnStartStop = container.append("button")
         .style("margin-left", margin.left + 'px')
         .style("margin-top", margin.top + 'px')
         .on("click", function() {
             var button = d3.select(this);
             if (!animating) {
-                button.text("Pause");
                 start();
             } else {
-                button.text("Start");
                 pause()
             }
         })
 
-    container.append("button")
-        .text("Reset")
+    btnStartStop.append("img")
+
+    btnRestart = container.append("button")
+        .style("margin-left", '5px')
         .on("click", function(el) {
             reset();
-            startStop.text("Pause");
         })
+
+    start()
+    btnRestart.append("img")
+        .attr("src", "icon_restart.svg")
 }
 
 var load_data = function(csvfile, params) {
@@ -325,7 +332,6 @@ var load_data = function(csvfile, params) {
             graph_width: graph_width,
             margin: margin,
             scales : {
-                // TODO fix this 500 - be more generic and dynamic
                 x : d3.scale.linear().domain([min_x, dataobj.x.max]).range([y_axis_margin, graph_width]).nice(),
                 y : d3.scale.linear().domain([min_y, dataobj.y.max]).range([height - x_axis_margin, 10]).nice(),
                 radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([min_radius, max_radius])

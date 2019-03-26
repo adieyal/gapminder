@@ -66,3 +66,7 @@ line.world-markets {
     stroke: #8B2216;
     stroke-dasharray: 5;
 }
+
+#chart button {
+    border: none;
+}
