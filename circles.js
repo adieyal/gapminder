@@ -340,5 +340,9 @@ var load_data = function(csvfile, params) {
 
         gapminder.initCircles();
         gapminder.startAnimation()
+
+        if (params.drawing_callback) {
+            params.drawing_callback(container.select("svg"), gapminder)
+        }
     })
 };

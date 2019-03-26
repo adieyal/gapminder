@@ -35,6 +35,30 @@ load_data("income.csv", {
     y_axis_label: "MEDIAN AGE",
     min_y : 15,
     width: 1680,
-    height: 500
+    height: 500,
+    drawing_callback : function(container, gapminder) {
+        var chart = container.select("g")
+        chart
+            .append("line")
+            .attr("x1", gapminder.scales.x(1000))
+            .attr("x2", gapminder.scales.x(1000))
+            .attr("y1", gapminder.scales.y(14))
+            .attr("y2", gapminder.scales.y(50))
+            .style("stroke", "#F6C343")
+            .style("stroke-width", "5px")
+        chart
+            .append("text")
+            .text("Level 4")
+            .style("fill", "#F6C343")
+            .style("font-size", "2em")
+            .attr("transform", "translate(" + gapminder.scales.x(1020) + ",10)")
+        chart
+            .append("text")
+            .text("middle income status")
+            .style("fill", "black")
+            .style("font-size", "1.1em")
+            .attr("transform", "translate(" + gapminder.scales.x(1020) + ",35)")
+    }
+
 });
 </script>
