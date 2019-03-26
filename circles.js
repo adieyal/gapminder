@@ -47,7 +47,7 @@ BubbleLabel.prototype = {
     },
 
     hidden : function() {
-        if (this.is_hidden && this.gapminder.scales.radius(this.radius) < 10)
+        if (this.is_hidden && this.gapminder.scales.radius(this.radius) < 15)
             return true;
         return false;
     }
@@ -140,8 +140,12 @@ GapMinder.prototype = {
         self = gapminder;
         dot
           .attr("x", function(d) {
-              return self.scales.x(d.x); })
-          .attr("y", function(d) { return self.scales.y(d.y); })
+              var radius = self.scales.radius(d.radius);
+              return self.scales.x(d.x) + radius / 2 + 8})
+          .attr("y", function(d) {
+              var radius = self.scales.radius(d.radius);
+              return self.scales.y(d.y) - (radius / 2);
+           })
           .classed("hidden", function(d) {
               return d.hidden();
           })
@@ -186,7 +190,7 @@ GapMinder.prototype = {
                 .data(this.bubble_labels)
                 .enter().append("text")
                     .attr("class", "label")
-                    .attr("text-anchor", "middle")
+                    .attr("text-anchor", "start")
                     .text(self.p.func_label)
                     .call(this.position_label, this)
     },
