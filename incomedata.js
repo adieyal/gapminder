@@ -18,8 +18,8 @@ var Data = function(data, x_key, y_key, radius_key, years, country_key, indicato
     }
 
     this.y = {
-        min : _nested_min(this.hash, "y_data"),
-        max : _nested_max(this.hash, "y_data"),
+        min : _nested_min(this.hash, "y_data") * 0.9,
+        max : _nested_max(this.hash, "y_data") * 1.1,
         key : "y_data"
     }
 

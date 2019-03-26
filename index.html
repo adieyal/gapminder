@@ -35,14 +35,14 @@ load_data("income.csv", {
     y_axis_label: "MEDIAN AGE",
     min_y : 15,
     width: 1280,
-    height: 500,
+    height: 506,
     drawing_callback : function(container, gapminder) {
         var chart = container.select("g")
         chart
             .append("line")
             .attr("x1", gapminder.scales.x(1000))
             .attr("x2", gapminder.scales.x(1000))
-            .attr("y1", gapminder.scales.y(14))
+            .attr("y1", gapminder.scales.y(15))
             .attr("y2", gapminder.scales.y(50))
             .style("stroke", "#F6C343")
             .style("stroke-width", "5px")

@@ -1,6 +1,6 @@
 
 // Chart dimensions.
-var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 100},
+var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 19.5},
     y_axis_margin = 60,
     x_axis_margin = 65;
 
@@ -67,8 +67,9 @@ var GapMinder = function(container, dataobj, years, properties) {
 
     this.svg = container.append("svg")
         //.attr("width", p.width + p.margin.left + p.margin.right)
+        //.attr("viewbox", "0 0 " + p.width + " " + p.height)
         .attr("width", "100%")
-        .attr("height", p.height + p.margin.top + p.margin.bottom)
+        .attr("height", "100%")
         .append("g")
             .attr("transform", "translate(" + p.margin.left + "," + p.margin.top + ")");
 

@@ -10,8 +10,8 @@ h1 {
 }
 
 #chart {
-  margin-left: -40px;
-  height: 506px;
+  height: 486px;
+  width: 100%;
 }
 
 text {
