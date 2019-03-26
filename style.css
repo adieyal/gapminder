@@ -61,3 +61,8 @@ text {
     fill:black;
     font-size: 1.0em;
 }
+
+line.world-markets {
+    stroke: #8B2216;
+    stroke-dasharray: 5;
+}

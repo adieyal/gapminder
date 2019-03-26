@@ -1,10 +1,10 @@
 
 // Chart dimensions.
 var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 100},
-    width = 1024 - margin.right,
-    height = 500 - margin.top - margin.bottom,
     y_axis_margin = 60,
     x_axis_margin = 65;
+
+graph_width = 1000;
 
 
 var colorScale = d3.scale.category10();
@@ -105,9 +105,31 @@ var GapMinder = function(container, dataobj, years, properties) {
         .attr("text-anchor", "middle")
         .attr("y", p.height / 2)
         .attr("dy", "0.25em")
-        .attr("x", p.width / 2)
+        .attr("x", p.graph_width / 2)
         .text(this.years.start_year)
         .classed("year-label", true);
+
+    var lines_group = this.graph.append("g");
+    if (properties.additional_lines) {
+        for (idx in properties.additional_lines) {
+            line = properties.additional_lines[idx];
+            line_group = lines_group.append("g")
+            line_group.append("line")
+                .attr("x1", this.scales.x(0))
+                .attr("y1", 0)
+                .attr("x2", this.scales.x(dataobj.x.max))
+                .attr("y2", 0)
+                .classed("world-markets", true)
+             line_group.append("text")
+                .text(line.label)
+                .style("text-anchor", "start")
+                .attr("transform", "translate(" + this.scales.x(dataobj.x.max) + ")")
+                .attr("dy", "0.3em")
+                .attr("dx", "0.3em")
+
+             line_group.attr("transform", "translate(0," + this.scales.y(line.value) + ")")
+        }
+    }
 }
 
 GapMinder.prototype = {
@@ -286,23 +308,33 @@ var load_data = function(csvfile, params) {
     var max_radius = params.max_radius ? params.max_radius : 40;
     var func_label = params.func_label ? params.func_label : function(d) { return d.name; };
     var additional_data = params.additional_data ? params.additional_data : {};
+    var additional_lines = params.additional_lines ? params.additional_lines : [];
 
     d3.csv(csvfile, function(data) {
         var dataobj = new Data(data, params.x_key, params.y_key, params.radius_key, params.years, params.country_key, params.indicator_key)
 
+        var width = params.width - margin.right;
+        var height = params.height - margin.top - margin.bottom;
+        var graph_width = width;
+        if (params.additional_lines)
+            graph_width *= 0.7;
+            
         var gapminder = new GapMinder(container, dataobj, params.years, {
             width: width,
             height: height,
+            graph_width: graph_width,
             margin: margin,
             scales : {
-                x : d3.scale.linear().domain([min_x, dataobj.x.max]).range([y_axis_margin, width]).nice(),
+                // TODO fix this 500 - be more generic and dynamic
+                x : d3.scale.linear().domain([min_x, dataobj.x.max]).range([y_axis_margin, graph_width]).nice(),
                 y : d3.scale.linear().domain([min_y, dataobj.y.max]).range([height - x_axis_margin, 10]).nice(),
                 radius : d3.scale.sqrt().domain([dataobj.radius.min, dataobj.radius.max]).range([min_radius, max_radius])
             },
             x_axis_label : params.x_axis_label,
             y_axis_label : params.y_axis_label,
             func_label : func_label,
-            additional_data : additional_data
+            additional_data : additional_data,
+            additional_lines : additional_lines
         });
         var button = new StartButton(gapminder, container);
 

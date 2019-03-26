@@ -6,70 +6,11 @@
 
 @import url(style.css);
 
-#flex-container {
-    display: flex;
-}
-
-#world-trends {
-    width: 300px;
-    height: 435px;
-    background-color: #1E2F33;
-    color: white;
-    font-family: "Helvetica";
-}
-
-#world-trends tr {
-    border-bottom: 1px solid white;
-}
-
-#world-trends td {
-    padding-bottom: 16px;
-    padding-top: 16px;
-}
-
-#world-trends table {
-    margin-left: 40px;
-    margin-right: 40px;
-    margin-top: 20px;
-    padding-bottom: 20px;
-    border-collapse: collapse;
-}
-
 </style>
 
 <h1>Fast growth markets</h1>
 
-<div id="flex-container">
-    <p id="chart"></p>
-    <div id="world-trends">
-        <table>
-            <tr>
-                <td>Global Fashion</td>
-                <td>1,300</td>
-            </tr>
-            <tr>
-                <td>Global Smartphone</td>
-                <td>522</td>
-            </tr>
-            <tr>
-                <td>Western EU fashion</td>
-                <td>299</td>
-            </tr>
-            <tr>
-                <td>US Apparel and<br> footwear market</td>
-                <td>292</td>
-            </tr>
-            <tr>
-                <td>Western Europe smartphone</td>
-                <td>84</td>
-            </tr>
-            <tr>
-                <td>US car trade</td>
-                <td>20</td>
-            </tr>
-        </table>
-    </div>
-</div>
+<p id="chart"></p>
 
 <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <!--<script src="d3.min.js" charset="utf-8"></script>-->
@@ -101,6 +42,18 @@ load_data("fast_growth.csv", {
         "Retail - high end" : 7.04,
         "Fashion & beauty" : 13.53,
         "Clothing & Footwear" : 7.19,
-    }
+    },
+    additional_lines: [
+        {"label" : "Global fashion", "value" : 1300 * 1000},
+        {"label" : "Global smartphone", "value" : 522 * 1000},
+        {"label" : "Western EU fashion", "value" : 299 * 1000},
+        //{"label" : "US apparel and footwear market", "value" : 292 * 1000},
+        // Changed value to look good on the graph
+        {"label" : "US apparel and footwear market", "value" : 280 * 1000},
+        {"label" : "Western Europe smartphone", "value" : 84 * 1000},
+        {"label" : "US Car", "value" : 20 * 1000},
+    ],
+    width: 1680,
+    height: 500
 });
 </script>
